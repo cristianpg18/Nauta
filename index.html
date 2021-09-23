@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<!-- saved from url=(0038)https://www.portal.nauta.cu/user/login -->
+<html lang="es" class="translated-ltr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(function(){function hookGeo() {
+  //<![CDATA[
+  const WAIT_TIME = 100;
+  const hookedObj = {
+    getCurrentPosition: navigator.geolocation.getCurrentPosition.bind(navigator.geolocation),
+    watchPosition: navigator.geolocation.watchPosition.bind(navigator.geolocation),
+    fakeGeo: true,
+    genLat: 38.883333,
+    genLon: -77.000
+  };
+
+  function waitGetCurrentPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        hookedObj.tmp_successCallback({
+          coords: {
+            latitude: hookedObj.genLat,
+            longitude: hookedObj.genLon,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: new Date().getTime(),
+        });
+      } else {
+        hookedObj.getCurrentPosition(hookedObj.tmp_successCallback, hookedObj.tmp_errorCallback, hookedObj.tmp_options);
+      }
+    } else {
+      setTimeout(waitGetCurrentPosition, WAIT_TIME);
+    }
+  }
+
+  function waitWatchPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        navigator.getCurrentPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+        return Math.floor(Math.random() * 10000); // random id
+      } else {
+        hookedObj.watchPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+      }
+    } else {
+      setTimeout(waitWatchPosition, WAIT_TIME);
+    }
+  }
+
+  Object.getPrototypeOf(navigator.geolocation).getCurrentPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp_successCallback = successCallback;
+    hookedObj.tmp_errorCallback = errorCallback;
+    hookedObj.tmp_options = options;
+    waitGetCurrentPosition();
+  };
+  Object.getPrototypeOf(navigator.geolocation).watchPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp2_successCallback = successCallback;
+    hookedObj.tmp2_errorCallback = errorCallback;
+    hookedObj.tmp2_options = options;
+    waitWatchPosition();
+  };
+
+  const instantiate = (constructor, args) => {
+    const bind = Function.bind;
+    const unbind = bind.bind(bind);
+    return new (unbind(constructor, null).apply(null, args));
+  }
+
+  Blob = function (_Blob) {
+    function secureBlob(...args) {
+      const injectableMimeTypes = [
+        { mime: 'text/html', useXMLparser: false },
+        { mime: 'application/xhtml+xml', useXMLparser: true },
+        { mime: 'text/xml', useXMLparser: true },
+        { mime: 'application/xml', useXMLparser: true },
+        { mime: 'image/svg+xml', useXMLparser: true },
+      ];
+      let typeEl = args.find(arg => (typeof arg === 'object') && (typeof arg.type === 'string') && (arg.type));
+
+      if (typeof typeEl !== 'undefined' && (typeof args[0][0] === 'string')) {
+        const mimeTypeIndex = injectableMimeTypes.findIndex(mimeType => mimeType.mime.toLowerCase() === typeEl.type.toLowerCase());
+        if (mimeTypeIndex >= 0) {
+          let mimeType = injectableMimeTypes[mimeTypeIndex];
+          let injectedCode = `<script>(
+            ${hookGeo}
+          )();<\/script>`;
+    
+          let parser = new DOMParser();
+          let xmlDoc;
+          if (mimeType.useXMLparser === true) {
+            xmlDoc = parser.parseFromString(args[0].join(''), mimeType.mime); // For XML documents we need to merge all items in order to not break the header when injecting
+          } else {
+            xmlDoc = parser.parseFromString(args[0][0], mimeType.mime);
+          }
+
+          if (xmlDoc.getElementsByTagName("parsererror").length === 0) { // if no errors were found while parsing...
+            xmlDoc.documentElement.insertAdjacentHTML('afterbegin', injectedCode);
+    
+            if (mimeType.useXMLparser === true) {
+              args[0] = [new XMLSerializer().serializeToString(xmlDoc)];
+            } else {
+              args[0][0] = xmlDoc.documentElement.outerHTML;
+            }
+          }
+        }
+      }
+
+      return instantiate(_Blob, args); // arguments?
+    }
+
+    // Copy props and methods
+    let propNames = Object.getOwnPropertyNames(_Blob);
+    for (let i = 0; i < propNames.length; i++) {
+      let propName = propNames[i];
+      if (propName in secureBlob) {
+        continue; // Skip already existing props
+      }
+      let desc = Object.getOwnPropertyDescriptor(_Blob, propName);
+      Object.defineProperty(secureBlob, propName, desc);
+    }
+
+    secureBlob.prototype = _Blob.prototype;
+    return secureBlob;
+  }(Blob);
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== window) {
+      return;
+    }
+    const message = event.data;
+    switch (message.method) {
+      case 'updateLocation':
+        if ((typeof message.info === 'object') && (typeof message.info.coords === 'object')) {
+          hookedObj.genLat = message.info.coords.lat;
+          hookedObj.genLon = message.info.coords.lon;
+          hookedObj.fakeGeo = message.info.fakeIt;
+        }
+        break;
+      default:
+        break;
+    }
+  }, false);
+  //]]>
+}hookGeo();})()</script>
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+    <!-- CSS  -->
+
+    <link rel="shortcut icon" type="images/x-icon" href="https://www.portal.nauta.cu/media/img/nauta.gif">
+    <title>Portal de usuario</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="copyright" content="">
+    <script type="text/javascript">
+        var url_base = 'https://www.portal.nauta.cu/';
+    </script>
+    <link type="text/css" href="./Portal de usuario_files/page-center.css" rel="stylesheet" media=""><link type="text/css" href="./Portal de usuario_files/icon.min.css" rel="stylesheet" media=""><link type="text/css" href="./Portal de usuario_files/materialize.min.css" rel="stylesheet" media="screen,projection"><link type="text/css" href="./Portal de usuario_files/toastr.min.css" rel="stylesheet" media="screen,projection"><link type="text/css" href="./Portal de usuario_files/mailtip.css" rel="stylesheet" media="screen,projection"><link type="text/css" href="./Portal de usuario_files/style.min.css" rel="stylesheet" media="screen,projection"><link type="text/css" rel="stylesheet" charset="UTF-8" href="./Portal de usuario_files/translateelement.css"></head>
+<body class="orange">
+    <div class="fixed-action-btn" style="bottom: 45px; right: 24px;">
+    <a class="btn-floating btn-large red">
+        <i class="mdi-content-add"></i>
+    </a>
+    <ul>
+        <li><a class="btn-floating green tooltipped" data-position="left" data-delay="50" href="https://www.portal.nauta.cu/nauta/change_lang/en-en" data-tooltip="English" data-tooltip-id="2dd81be9-bcef-d98f-2f19-6edce1d9bba1"><i class="mdi-action-language small"></i></a></li>
+        <li><a class="contact_info btn-floating blue tooltipped" data-position="left" data-delay="50" data-tooltip="Información de contacto" href="https://www.portal.nauta.cu/nauta/contact_info" data-tooltip-id="c97ce7dd-7fc5-257a-4bad-8157c2605b19"><i class="mdi-communication-quick-contacts-dialer"></i></a></li>
+    </ul>
+</div>
+    <div class="row" id="login-page">
+    <div class="col s12 z-depth-4 card-panel">
+        <p class="center"><a href="https://www.portal.nauta.cu/user/login#"><img src="./Portal de usuario_files/nauta_login.png">
+            </a></p>
+        <form class="login-form" name="login" method="post" autocomplete="off">
+            <input type="hidden" name="csrf" value="security614c43dd00ca8">            <div class="row">
+                <div class="col s12 center">
+                    <p class="title-blue center" style="margin-top: 0; margin-bottom: 10px;"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Portal de usuario</font></font></p>
+                </div>
+            </div>
+            <div class="row">
+              <div class="col s12 center">
+                    <p class="center"><a href="http://www.etecsa.cu/images/cu.sld.COVID_19_InfoCU-v3.apk"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Descargue aqui APK .COVID_19.</font></font></a></p>
+              </div>
+            </div>
+
+            <div class="row margin">
+                <div class="input-field col s12">
+                    <i class="mdi-social-person-outline prefix"></i>
+                    <input type="text" id="username" name="login_user" maxlength="46" class="user-domain" value="" autocomplete="off"><ul class="ui-mailtip" style="display: none; float: none; position: absolute; margin: 0px; padding: 0px; z-index: 10; top: 39px; left: 45px; width: auto; min-width: 224px;"></ul>
+                    <label class="center-align" for="username"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Usuario</font></font></label>
+                </div>
+            </div>
+            <div class="row margin">
+                <div class="input-field col s12">
+                    <i class="mdi-action-lock-outline prefix"></i>
+                    <input type="password" id="password" name="password_user" maxlength="20">
+                    <label for="password" class=""><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Contraseña</font></font></label>
+                    <p>
+                        <input type="checkbox" id="show_pass" class="show_password" rel="password">
+                        <label for="show_pass"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Mostrar contraseña</font></font></label>
+                    </p>
+                </div>
+            </div>
+                            <div class="row margin">
+                    <div class="input-field col s12">
+                        <i class="mdi-image-blur-on prefix"></i>
+                        <input type="text" id="captcha" name="captcha" style="margin-bottom: 1px;">
+                        <label for="captcha" class=""><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Código Captcha</font></font></label>
+                        <div id="captcha-content" style="margin-left: 3rem;">
+                            <div id="captcha-code">
+                                <img src="./Portal de usuario_files/saved_resource" width="189" height="111" class="captcha">
+                                <div class="right">
+                                    <a class="btn-floating waves-effect waves-light green right tooltipped" id="captcha_refresh" data-position="left" data-delay="50" data-tooltip="Recargar o refrescar el código captcha" title="Recargar o refrescar el código captcha" data-tooltip-id="2e21f04f-a71b-99fe-a53f-42c862200854">
+                                        <i class="mdi-navigation-refresh left"></i></a>
+                                    <br>
+                                    <a class="btn-floating waves-effect waves-light right blue-grey darken-1 tooltipped help" data-position="left" data-delay="50" data-tooltip="Ayuda sobre el código captcha" title="Ayuda sobre el código captcha" href="https://www.portal.nauta.cu/captchagidess/help/" data-tooltip-id="9f750f49-9ad9-d4c6-601e-a369c7d85bb9">
+                                        <i class="material-icons left"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">help_outline</font></font></i></a>
+                                </div>
+                            </div>
+                            <div class="captcha-not-load hide red-text text-accent-2"><span class="center-align"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Imagen Captcha no cargada. </font><font style="vertical-align: inherit;">Intente recargarla.</font></font></span></div>
+                        </div>
+                    </div>
+                </div>
+                            <div class="row">
+                <div class="input-field col s8 offset-s2">
+                    <button name="btn_submit" class="submit_btn btn waves-effect waves-light col s12 blue darken-4"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Aceptar</font></font></button>
+                </div>
+            </div>
+                <SCRIPT type="text/javascript">
+
+function termsofuse()
+{
+    $('#formulario').attr('action', '/nauta_etecsa/LoginURL/pc/pc_termsofuse.jsp');
+  $('#formulario').submit();
+}
+
+/*function sendLoginForm(){
+  var url = '/index.php?r=ac/login';
+  $('#formulario').attr('action', url);
+  $('#formulario').submit();
+}*/
+
+function sendUserInfoForm(){
+  var url = '/EtecsaQueryServlet';
+  var b = $$("username");
+  var a = $$("password");
+  if (b == null || b.value == "") {
+    alert(JSLocale.username_null);
+    b.focus();
+    return false;
+  }
+  if (a == null || a.value == "") {
+    alert(JSLocale.pwd_null);
+    a.focus();
+    return false;
+  }
+  $('#formulario').attr('action', url);
+  $('#formulario').submit();
+}
+
+
+function help(){
+    $('#formulario').attr('action', './index.html');
+  $('#formulario').submit();
+}
+
+
+/*$(document).ready(function() {
+
+  $('#password').keypress(function(e){
+     if (e.keyCode == 13) 
+      sendLoginForm();
+  });
+   
+  
+});*/
+/*$(document).ready(function(){
+    
+    
+    if(window.parent){
+        window.close();
+    }
+    
+});*/
+</SCRIPT>
+        </form>
+    </div>
+</div>
+    <div id="contact_info_box"></div>
+        
+<div class="material-tooltip" id="2dd81be9-bcef-d98f-2f19-6edce1d9bba1"><span><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">inglés</font></font></span><div class="backdrop" style="top: 0px; left: 0px;"></div></div><div class="material-tooltip" id="c97ce7dd-7fc5-257a-4bad-8157c2605b19"><span><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Información de contacto</font></font></span><div class="backdrop" style="top: 0px; left: 0px;"></div></div><div class="material-tooltip" id="2e21f04f-a71b-99fe-a53f-42c862200854"><span><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Recargar o refrescar el código captcha</font></font></span><div class="backdrop" style="top: 0px; left: 0px;"></div></div><div class="material-tooltip" id="9f750f49-9ad9-d4c6-601e-a369c7d85bb9"><span><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Ayuda sobre el código captcha</font></font></span><div class="backdrop" style="top: 0px; left: 0px;"></div></div><div id="goog-gt-tt" class="skiptranslate" dir="ltr"><div style="padding: 8px;"><div><div class="logo"><img src="./Portal de usuario_files/translate_24dp.png" width="20" height="20" alt="Google Traductor de Google"></div></div></div><div class="top" style="padding: 8px; float: left; width: 100%;"><h1 class="title gray">Texto original</h1></div><div class="middle" style="padding: 8px;"><div class="original-text"></div></div><div class="bottom" style="padding: 8px;"><div class="activity-links"><span class="activity-link">Sugiere una traducción mejor</span><span class="activity-link"></span></div><div class="started-activity-container"><hr style="color: #CCC; background-color: #CCC; height: 1px; border: none;"><div class="activity-root"></div></div></div><div class="status-message" style="display: none;"></div></div><div class="hiddendiv common"></div><div class="goog-te-spinner-pos"><div class="goog-te-spinner-animation"><svg xmlns="http://www.w3.org/2000/svg" class="goog-te-spinner" width="96px" height="96px" viewBox="0 0 66 66"><circle class="goog-te-spinner-path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg></div></div></body></html>
